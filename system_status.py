@@ -19,8 +19,6 @@ def process_new_intel(intel):
     """
     Processes new intel
     :param intel: list of lines of new intel.
-     [ 2017.03.17 04:28:59 ] spicy indian > Solar System - 1P-QWR\rn
-     [ 2017.01.27 16:28:42 ] Sergey Russian > JM0A-4 clr\r\n
     """
     new_neuts = []
     for line in intel:
@@ -35,7 +33,7 @@ def process_new_intel(intel):
         tokens = line.rstrip().split(" ")
         if 'Bookmark' in tokens:
             continue
-        elif 'clr' in tokens or 'clear' in tokens:
+        elif 'clr' in tokens or 'clear' in tokens:  # this does not catch 'Clr'...
             neutrals_spotted[system_id] = []
             print("{0} clear".format(system[0]))
             continue

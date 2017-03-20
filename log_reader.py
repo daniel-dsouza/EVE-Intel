@@ -19,8 +19,8 @@ class MyHandler(PatternMatchingEventHandler):
         print("found {}".format(event.src_path))
         time.sleep(0.1)  # if there is no delay, then you may not be able to open the file!
         with codecs.open(event.src_path, 'r', 'utf-16-le') as log:
-            a = log.readlines()
-            print(a)
+            _ = log.readlines()
+            # print(a)
             self.files[event.src_path] = log.tell()
 
 

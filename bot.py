@@ -43,12 +43,14 @@ async def watch_intel():
 
             neutrals = system_status.process_new_intel(intel)
             for n in neutrals:
-                if n[1] < 3:
-                    await client.send_message(intel_channel, "Safe the fuck up! Neutrals next door in {1}.".format(n[1], n[0]), tts=True)
+                if n[1] < 2:
+                    await client.send_message(intel_channel, "Safe the fuck up! Neutrals next door in {0}.".format(n[0]), tts=True)
+                elif n[1] < 4:
+                    await client.send_message(intel_channel, "Neutral in the pocket in {0}, {1} jumps away.".format(n[0], n[1]), tts=True)
                 elif n[1] < 9:
-                    await client.send_message(intel_channel, "neutral {0} jumps away in {1}.".format(n[1], n[0]), tts=True)
+                    await client.send_message(intel_channel, "Neutral {0} jumps away in {1}.".format(n[1], n[0]), tts=True)
                 elif n[1] < 12:
-                    await client.send_message(intel_channel, "neutral {0} jumps away in {1}.".format(n[1], n[0]))
+                    await client.send_message(intel_channel, "Neutral {0} jumps away in {1}.".format(n[1], n[0]))
 
         except Exception as e:
             # print(e)
