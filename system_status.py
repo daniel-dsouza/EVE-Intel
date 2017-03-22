@@ -1,11 +1,51 @@
 import datetime
 import re
 
-import esi_routes
+import esi_routes as esi
+import log_reader
 
 neutrals_spotted = {'30003230': []}
 
 system_regex = re.compile("[A-Z0-9][A-Z0-9]*-[A-Z0-9][A-Z0-9]*")
+
+class Intelligence(object):
+    def __init__(self):
+        self.cookie = None
+
+    def get_intel(self):
+        raise NotImplementedError
+
+class IntelParser(object):
+    def __init__(self, game_channels):
+        self.systems = {}
+        self.intel_channels = log_reader.LogReader(game_channels, '\Documents\EVE\logs\Chatlogs')
+
+    def start(self):
+        log_reader.start_observer()
+
+    def process_new_intel(self):
+        intel = self.intel_channels.read_logs()
+
+    def reset(self):
+        raise NotImplementedError
+
+class System(object):
+    def __init__(self, home_system):
+        self.home_system_name = home_system
+        self.home_system_id = esi.get_system_id(home_system)
+        self.neutrals = {}
+        self.new_neutrals = []
+
+    def add_intel(self, intel):
+        return "i am bacon"
+
+    def nearest_neutral(self, jumps):
+        raise NotImplementedError
+
+    def newest_neutrals(self, jumps):
+        data = [(loc, esi.get_jumps(loc)) for loc in self.new_neutrals if esi.get_jumps(loc) < jumps]
+        self.new_neutrals = []
+        return data
 
 
 def add_intel(system_id):
