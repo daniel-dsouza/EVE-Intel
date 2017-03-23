@@ -29,7 +29,7 @@ class EVEbot:
         for chan in channels:
             system_name = chan.name[6:].swapcase()
             system_id = esi_routes.get_system_id(system_name)
-            self.intel_channels[system_id] = (chan, System(system_id))
+            self.intel_channels[system_id] = (chan, System(system_name))
             print('Providing intel to {0}'.format(system_name))
 
         print(self.intel_channels)
@@ -41,28 +41,60 @@ class EVEbot:
         await asyncio.sleep(5)  # this helps, i promise
 
         while not self.bot.is_closed:
-            for system_id, (channel, system) in self.intel_channels.items():
-                message, jumps, = "hi", 5
-                self.bot.send_message(channel, message, tts=True if jumps < 9 else False)
+            await asyncio.sleep(10)
 
-            asyncio.sleep(2)
+            raw = [
+                '[ 2017.03.22 22:08:56 ] spicy indian > ok',
+                '[ 2017.03.18 10:01:35 ] Andrei Nikitin > BY-7PY* Tiranda',
+                '[ 2017.03.18 09:31:48 ] Line chef > MN9P-A  clr DU'
+            ]
+
+            intel = self.intel_parser.process_new_intel(raw)
+            if intel is None:
+                continue
+
+            for system_id, (channel, system) in self.intel_channels.items():
+                i = system.add_intel(intel)
+                for a, jumps in i:
+                    print(a)
+                    if a.clear is True:
+                        continue
+
+                    if jumps < 2:
+                        message = "Safe the fuck up! Neutral {0} jumps out in {1.system_name}."
+                    else:
+                        message = "Neutral {0} jumps out in {1.system_name}."
+
+                    print(message.format(jumps, a))
+                    await self.bot.send_message(channel, message.format(jumps, a), tts=True if jumps < 9 else False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def watch(self, ctx, *, system: str):
         system_id = esi_routes.get_system_id(system)
-        if system_id in self.intel_channels:
+        if system_id is None:
+            await self.bot.say("no such system {0}".format(system))
+            return
+        elif system_id in self.intel_channels:
             await self.bot.say("already watching {0}".format(system))
             return
 
-        channel = await self.bot.create_channel(ctx.message.server, 'intel-'+system.swapcase())
-        self.intel_channels[system_id] = (channel, System(system_id))
+        channel = await self.bot.create_channel(ctx.message.server, 'intel-'+system)
+        self.intel_channels[system_id] = (channel, System(system))
 
     @commands.command(pass_context=True, no_pm=True)
     async def unwatch(self, ctx, *, system: str):
         system_id = esi_routes.get_system_id(system)
+        if system_id is None:
+            await self.bot.say("no such system {0}".format(system))
+            return
+        elif self.intel_channels[system_id] is None:
+            await self.bot.say("no channel to remove for {0}".format(system))
+            return
+
+        await self.bot.say("removing channel {0}".format(system))
         await self.bot.delete_channel(self.intel_channels[system_id][0])
         self.intel_channels.pop(system_id)
-        await self.bot.say("removing channel {0}".format(system))
+
 
 
 @evebot.event

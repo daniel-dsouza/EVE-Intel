@@ -11,8 +11,12 @@ def get_system_id(system_name):
     uri = 'https://esi.tech.ccp.is/latest/search/?categories=solarsystem&datasource=tranquility&language=en-us&search=' + system_name
     r = requests.get(uri)
     if r.status_code == requests.codes.ok:
-        system_ids[system_name] = str(r.json()['solarsystem'][0])
-        return system_ids[system_name]
+        try:
+            system_ids[system_name] = str(r.json()['solarsystem'][0])
+            return system_ids[system_name]
+        except KeyError:
+            print('no system ' + system_name)
+            return None
 
 
 def get_jumps(origin, destination):

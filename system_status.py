@@ -9,10 +9,25 @@ neutrals_spotted = {'30003230': []}
 system_regex = re.compile("[A-Z0-9][A-Z0-9]*-[A-Z0-9][A-Z0-9]*")
 
 
+class Intel(object):
+    def __init__(self, message, timestamp=None, sender=None):
+        self.eve_timestamp = timestamp
+        self.sender = sender
+        self.raw_message = message
+
+        systems = system_regex.findall(message)
+        self.system_name = systems[0] if len(systems) != 0 else None
+        self.system_id = esi.get_system_id(self.system_name) if self.system_name else None
+
+        tokens = self.raw_message.split(' ')
+        self.clear = 'clr' in tokens or 'clear' in tokens
+
+
 class IntelParser(object):
     def __init__(self, game_channels):
         self.systems = {}
-        self.intel_channels = log_reader.LogReader(game_channels, '\Documents\EVE\logs\Chatlogs')
+        # self.intel_channels = log_reader.LogReader(game_channels, '\Documents\EVE\logs\Chatlogs')
+        self.intel_channels = log_reader.LogReader(game_channels, '/Documents/EVE/logs/Chatlogs')
 
     def start(self):
         log_reader.start_observer()
@@ -20,25 +35,18 @@ class IntelParser(object):
     def process_new_intel(self, manual=None):
         briefcase = []
         raw = self.intel_channels.read_logs() if manual is None else manual
+
+        if raw is None:
+            return
+
         for line in raw:
-            systems = system_regex.findall(line)
-            if len(systems) == 0:
-                continue
-            system_id = esi.get_system_id(systems[0])
-            if system_id is None:
-                continue
-
-            intel = {
-                'eve_timestamp': line[line.find(' [ ')+3: line.find(' ] ')],
-                'sender': line[line.find(' ] ')+3: line.find(' > ')],
-                'message': line[line.find(' > ')+3:],
-                'system_name': systems[0],
-                'system_id': system_id
-            }
-            tokens = intel['message'].split(' ')
-            intel['clear'] = 'clr' in tokens or 'clear' in tokens
-
-            briefcase.append(intel)
+            intel = Intel(
+                message=line[line.find(' > ')+3:],
+                timestamp=line[line.find(' [ ')+3: line.find(' ] ')],
+                sender=line[line.find(' ] ')+3: line.find(' > ')]
+            )
+            if intel.system_id is not None:
+                briefcase.append(intel)
 
         return briefcase
 
@@ -54,7 +62,13 @@ class System(object):
         self.new_neutrals = []
 
     def add_intel(self, intel):
-        return "i am bacon"
+        self.new_neutrals = []
+        for entry in intel:
+            jumps = esi.get_jumps(entry.system_id, self.home_system_id)
+            if jumps <= 100:
+                self.new_neutrals.append((entry, jumps))
+
+        return self.new_neutrals
 
     def nearest_neutral(self, jumps):
         raise NotImplementedError
@@ -73,7 +87,8 @@ if __name__ == '__main__':
         '[ 2017.03.18 09:31:48 ] Line chef > MN9P-A  clr DU'
     ]
     intel = de.process_new_intel(raw)
-    [print(i) for i in intel]
+    ne = bq.add_intel(intel)
+    [print(i[0].system_name + str(i[1])) for i in ne]
 
     # try:
     #     while True:
@@ -81,51 +96,3 @@ if __name__ == '__main__':
     #         print(intel)
     # except KeyboardInterrupt as e:
     #     pass
-
-
-# def add_intel(system_id):
-#     if system_id not in neutrals_spotted:
-#         neutrals_spotted[system_id] = [datetime.datetime.now()]
-#     else:
-#         neutrals_spotted[system_id] += [datetime.datetime.now()]
-#
-#
-# def process_new_intel(intel):
-#     """
-#     Processes new intel
-#     :param intel: list of lines of new intel.
-#     """
-#     new_neuts = []
-#     for line in intel:
-#         system = system_regex.findall(line)
-#         if len(system) == 0:
-#             continue
-#
-#         system_id = esi_routes.get_system_id(system[0])
-#         if system_id is None:
-#             continue
-#
-#         tokens = line.rstrip().split(" ")
-#         if 'Bookmark' in tokens:
-#             continue
-#         elif 'clr' in tokens or 'clear' in tokens:  # this does not catch 'Clr'...
-#             neutrals_spotted[system_id] = []
-#             print("{0} clear".format(system[0]))
-#             continue
-#
-#         add_intel(system_id)
-#         new_neuts.append((system[0], esi_routes.get_jumps(system_id, 30003230)))
-#
-#     return new_neuts
-
-
-# def get_newest_neut(jumps):
-#     newest_system, newest_delta, now = "", datetime.timedelta(1, 0, 0), datetime.datetime.now()
-#     for system, readings in neutrals_spotted.items():
-#         if now - v[1] < newest_delta and neutrals_spotted[system] < jumps:
-#             newest_delta = now - v[1]
-#             newest_system = system
-#
-#     return newest_system, neutrals_spotted[newest_system], newest_delta
-
-# print(process_new_intel(['[ 2017.03.17 04:28:59 ] spicy indian > Solar System - 1P-QWR\r\n']))
