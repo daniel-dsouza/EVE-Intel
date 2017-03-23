@@ -20,7 +20,7 @@ def start_observer():
 class MyHandler(PatternMatchingEventHandler):
     def on_created(self, event):
         time.sleep(0.1)  # if there is no delay, then you may not be able to open the file!
-        with codecs.open(event.src_path, 'r', 'utf-16-le') as log:
+        with codecs.open(event.src_path, 'r', 'utf-16') as log:
             if prefix(log.name) not in [prefix(x) for x in self.files]:  # do not read same log from multiple clients
                 _ = log.readlines()
                 print("using {0} to read '{1}'".format(log.name, prefix(log.name)))
@@ -40,23 +40,23 @@ class LogReader(object):
 
     def read_logs(self):
         for path, index in self.event_handler.files.items():
-            with codecs.open(path, 'r', 'utf-16-le') as log:
+            with codecs.open(path, 'r', 'utf-16') as log:
                 log.seek(index)
                 data = log.readlines()
                 self.event_handler.files[path] = log.tell()
 
                 if data:
-                    print(data)  # make custom data structure with words?
+                    data = [x.replace('\ufeff', '').rstrip() for x in data]  # TODO fix byteorder stuff
                     return data
 
 
 if __name__ == '__main__':
-    o = LogReader(["The Drone Den", "Obliteroids"], '\Documents\EVE\logs\Chatlogs')
+    # o = LogReader(["The Drone Den", "Obliteroids"], '\Documents\EVE\logs\Chatlogs')
     p = LogReader(["oba"], '\Documents\EVE\logs\Chatlogs')
     start_observer()
     try:
         while True:
-            print("1: {0}".format(o.read_logs()))
+            # print("1: {0}".format(o.read_logs()))
             print("2: {0}".format(p.read_logs()))
             time.sleep(10)
 
