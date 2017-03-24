@@ -26,8 +26,8 @@ class Intel(object):
 class IntelParser(object):
     def __init__(self, game_channels):
         self.systems = {}
-        # self.intel_channels = log_reader.LogReader(game_channels, '\Documents\EVE\logs\Chatlogs')
-        self.intel_channels = log_reader.LogReader(game_channels, '/Documents/EVE/logs/Chatlogs')
+        self.intel_channels = log_reader.LogReader(game_channels, '\Documents\EVE\logs\Chatlogs')
+        # self.intel_channels = log_reader.LogReader(game_channels, '/Documents/EVE/logs/Chatlogs')
 
     def start(self):
         log_reader.start_observer()

@@ -32,36 +32,29 @@ class EVEbot:
             self.intel_channels[system_id] = (chan, System(system_name))
             print('Providing intel to {0}'.format(system_name))
 
-        print(self.intel_channels)
-
     async def scrape_to_systems(self):
         await self.bot.wait_until_ready()
         self.intel_parser.start()
 
-        await asyncio.sleep(5)  # this helps, i promise
+        await asyncio.sleep(1)  # this helps, i promise
 
         while not self.bot.is_closed:
             await asyncio.sleep(10)
 
-            raw = [
-                '[ 2017.03.22 22:08:56 ] spicy indian > ok',
-                '[ 2017.03.18 10:01:35 ] Andrei Nikitin > BY-7PY* Tiranda',
-                '[ 2017.03.18 09:31:48 ] Line chef > MN9P-A  clr DU'
-            ]
-
-            intel = self.intel_parser.process_new_intel(raw)
+            intel = self.intel_parser.process_new_intel()
             if intel is None:
                 continue
 
             for system_id, (channel, system) in self.intel_channels.items():
                 i = system.add_intel(intel)
                 for a, jumps in i:
-                    print(a)
                     if a.clear is True:
                         continue
 
-                    if jumps < 2:
-                        message = "Safe the fuck up! Neutral {0} jumps out in {1.system_name}."
+                    if jumps == 0:
+                        message = "Stop drop and dock! Neutral in {1.system_name}."
+                    elif jumps == 1:
+                        message = "Safe the fuck up! Neutral next door in {1.system_name}."
                     else:
                         message = "Neutral {0} jumps out in {1.system_name}."
 
@@ -96,10 +89,9 @@ class EVEbot:
         self.intel_channels.pop(system_id)
 
 
-
 @evebot.event
 async def on_ready():
-    print('Logged in as:{0} (ID: {0.id})'.format(evebot.user))
+    print('Logged in as: {0} (ID: {0.id})'.format(evebot.user))
 
 if __name__ == '__main__':
     config.read('eve-bot.cfg')
