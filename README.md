@@ -1,7 +1,7 @@
 # EVE-bot
 I wanted a Discord bot for EVE, but I didn't want one that could leak sensitive information. So I made my own.
 
-If you find this useful, please tell `spicy indian` in game with a mail and or ISK donation!
+If you find this useful, please tell `spicy indian` in game with a mail and/or ISK donation!
 
 ## What does EVE-bot do?
 This is still a work in progress, and this list will grow.
@@ -23,10 +23,9 @@ To get your own discord bot token, you will need make a bot user.
 ```
 [discord]
 token = your discord bot token, no quotes
-dev_token = (optional) your discord bot token, prefered over token
+dev_token = (optional) your discord bot token, preferred over token
 
 [intel]
-discord_channel = Discord channel to post intel, no quotes (defaults to general)
 eve_channels = [
     "EVE chat channel 1",
     "EVE chat channel 20"]

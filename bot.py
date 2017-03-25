@@ -40,7 +40,7 @@ class EVEbot:
         await asyncio.sleep(1)  # this helps, i promise
 
         while not self.bot.is_closed:
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)  # check for intel every 5 seconds
 
             intel = self.intel_parser.process_new_intel()
             if intel is None:
