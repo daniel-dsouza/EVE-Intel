@@ -65,7 +65,7 @@ class System(object):
         self.new_neutrals = []
         for entry in intel:
             jumps = esi.get_jumps(entry.system_id, self.home_system_id)
-            if jumps <= 100:
+            if jumps <= 25:
                 self.new_neutrals.append((entry, jumps))
 
         return self.new_neutrals

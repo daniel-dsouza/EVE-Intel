@@ -3,6 +3,7 @@ import configparser
 import discord
 from discord.ext import commands
 import json
+import os.path
 
 import esi_routes
 import log_reader
@@ -94,7 +95,15 @@ async def on_ready():
     print('Logged in as: {0} (ID: {0.id})'.format(evebot.user))
 
 if __name__ == '__main__':
-    config.read('eve-bot.cfg')
+    try:
+        config.read('eve-bot.cfg')
+        if not os.path.exists('eve-bot.cfg'):
+            raise FileNotFoundError
+    except FileNotFoundError as e:
+        print('Could not find any filed named "eve-bot.cfg" in this directory.')
+        input('Press ENTER to quit')
+        exit()
+
     evebot.add_cog(EVEbot(evebot))
 
     try:
