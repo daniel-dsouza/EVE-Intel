@@ -1,4 +1,6 @@
 # EVE-bot
+[![Build Status](https://travis-ci.org/daniel-dsouza/eve-bot.svg?branch=master)](https://travis-ci.org/daniel-dsouza/eve-bot)
+
 I wanted a Discord bot for EVE, but I didn't want one that could leak sensitive information. So I made my own.
 
 If you find this useful, please tell `spicy indian` in game with a mail and/or ISK donation!
