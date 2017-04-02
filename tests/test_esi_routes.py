@@ -14,15 +14,15 @@ class TestESIRoutes(unittest.TestCase):
 
     def test_get_jumps(self):
         jumps = esi_routes.get_jumps('30005189', '30003230')
-        self.assertEqual(jumps, 16)
+        self.assertEqual(jumps, 15)
 
     def test_cache_get_jumps(self):
         _ = esi_routes.get_jumps('30001127', '30003230')
         jumps = esi_routes.get_jumps('30001127', '30003230')
-        self.assertEqual(jumps, 21)
+        self.assertEqual(jumps, 20)
 
     def test_reverse_get_jumps(self):
         jumps_forward = esi_routes.get_jumps('30003195', '30003230')
         jumps_backwards = esi_routes.get_jumps('30003230', '30003195')
         self.assertEqual(jumps_forward, jumps_backwards)
-        self.assertEqual(jumps_forward, 6)
+        self.assertEqual(jumps_forward, 5)
