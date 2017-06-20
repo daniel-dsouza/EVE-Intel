@@ -9,7 +9,13 @@ setup(
 
     options={
         'build_exe': {
-            'packages': ['encodings', 'asyncio']
+            'packages': ['asyncio',
+                         'discord',
+                         'encodings',
+                         'idna',
+                         'os',
+                         'requests'
+                         ]
         },
     },
 

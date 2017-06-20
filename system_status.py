@@ -1,98 +1,99 @@
-import datetime
-import re
-
-import esi_routes as esi
-import log_reader
-
-neutrals_spotted = {'30003230': []}
-
-system_regex = re.compile("[A-Z0-9][A-Z0-9]*-[A-Z0-9][A-Z0-9]*")
+from message_parser import parse_message, TokenType
+from evethings.character import Character
+from evethings.ship import Ship
+from evethings.system import System
 
 
 class Intel(object):
-    def __init__(self, message, timestamp=None, sender=None):
-        self.eve_timestamp = timestamp
-        self.sender = sender
-        self.raw_message = message
+    def __init__(self, raw):
+        self.timestamp = raw[raw.find(' [ ')+4:raw.find(' ] ')]  # TODO, make this a timestamp
+        self.sender = Character(character_name=raw[raw.find(' ] ')+3: raw.find(' > ')])
+        self.contents = list(parse_message(raw[raw.find(' > ')+3:]))
+        print(self.contents)
+        self.system = None
+        for x, y in self.contents:
+            if x is TokenType.SYSTEM:
+                self.system = System(system_name=y)
+                break
 
-        systems = system_regex.findall(message)
-        self.system_name = systems[0] if len(systems) != 0 else None
-        self.system_id = esi.get_system_id(self.system_name) if self.system_name else None
+    def get_characters(self):
+        return [Character(y) for x, y in self.contents if x is TokenType.CHARACTER]
 
-        tokens = self.raw_message.split(' ')
-        self.clear = 'clr' in tokens or 'clear' in tokens
+    def get_ships(self):
+        return [Ship(ship_name=y) for x, y in self.contents if x is TokenType.SHIP]
+
+    def get_clear(self):
+        return True if TokenType.CLEAR in [x for x, y in self.contents] else False
+
+    def get_nv(self):
+        return True if TokenType.NV in [x for x, y in self.contents] else False
+
+    def combine(self, other):
+        self.contents += [x for x in other.contents if x not in self.contents]
+        if self.system is None and other.system is not None:
+            self.system = other.system
+
+    def __eq__(self, other):
+        return self.sender.name == other.sender.name
 
 
 class IntelParser(object):
-    def __init__(self, game_channels):
-        self.systems = {}
-        self.intel_channels = log_reader.LogReader(game_channels, '\Documents\EVE\logs\Chatlogs')
-        # self.intel_channels = log_reader.LogReader(game_channels, '/Documents/EVE/logs/Chatlogs')
+    def __init__(self, jump_range):
+        self.jump_range = jump_range
+        self.briefcase = []
 
-    def start(self):
-        log_reader.start_observer()
+    def process_message(self, message):
+        if type(message) is Intel:
+            intel = message
+        else:
+            intel = Intel(message)
 
-    def process_new_intel(self, manual=None):
-        briefcase = []
-        raw = self.intel_channels.read_logs() if manual is None else manual
+        for i, x in enumerate(self.briefcase):
+            if intel.sender.name == x.sender.name or (intel.system and x.system and intel.system == x.system):
+                self.briefcase[i].combine(intel)
+                return
 
-        if raw is None:
-            return
+        self.briefcase.append(intel)
 
-        for line in raw:
-            intel = Intel(
-                message=line[line.find(' > ')+3:],
-                timestamp=line[line.find(' [ ')+3: line.find(' ] ')],
-                sender=line[line.find(' ] ')+3: line.find(' > ')]
-            )
-            if intel.system_id is not None:
-                briefcase.append(intel)
+    def summarize(self, home_system):
+        for intel in [x for x in self.briefcase if x.system is not None]:
+            jumps = home_system.get_jumps_to(intel.system)
 
-        return briefcase
+            if jumps >= self.jump_range or intel.get_clear():
+                continue
 
-    def reset(self):
-        raise NotImplementedError
+            characters = ', '.join([x.name for x in intel.get_characters()])
+            if len(characters) == 0:
+                characters = 'Neutral'
 
+            ships = ', '.join([x.name for x in intel.get_ships()])
+            if len(ships) > 0:
+                ships = 'in a ' + ships + ' '
 
-class System(object):
-    def __init__(self, home_system):
-        self.home_system_name = home_system
-        self.home_system_id = esi.get_system_id(home_system)
-        self.neutrals = {}
-        self.new_neutrals = []
+            jumps_str = str(jumps) + ' jump' if jumps==1 else str(jumps) + ' jumps'
 
-    def add_intel(self, intel, jump_range=20):
-        self.new_neutrals = []
-        for entry in intel:
-            jumps = esi.get_jumps(entry.system_id, self.home_system_id)
-            if jumps <= jump_range:
-                self.new_neutrals.append((entry, jumps))
-
-        return self.new_neutrals
-
-    def nearest_neutral(self, jumps):
-        raise NotImplementedError
-
-    def newest_neutrals(self, jumps):
-        raise NotImplementedError
+            message = '{0} {1}{2} away in {3}'.format(characters, ships, jumps_str, intel.system.name)
+            yield message, jumps
 
 
 if __name__ == '__main__':
-    bq = System('BQO-UU')
-    de = IntelParser(["The Drone Den", "Obliteroids", "oba"])
+    from chat_reader import ChatReader
+    from message_parser import parse_message
+    import asyncio
 
-    raw = [
-        '[ 2017.03.22 22:08:56 ] spicy indian > ok',
-        '[ 2017.03.18 10:01:35 ] Andrei Nikitin > BY-7PY* Tiranda',
-        '[ 2017.03.18 09:31:48 ] Line chef > MN9P-A  clr DU'
-    ]
-    intel = de.process_new_intel(raw)
-    ne = bq.add_intel(intel)
-    [print(i[0].system_name + str(i[1])) for i in ne]
+    async def hmm():
+        await c.wait_until_ready()
+        while True:
+            intel = IntelParser(jump_range=9)
+            messages = await c.get_messages()
+            for m in messages:
+                intel.process_message(m)
 
-    # try:
-    #     while True:
-    #         intel = de.process_new_intel(['[ 2017.03.22 22:08:56 ] spicy indian > ok'])
-    #         print(intel)
-    # except KeyboardInterrupt as e:
-    #     pass
+            for m in intel.summarize(home_system=System('BQO-UU')):
+                print(m)
+
+    c = ChatReader(["The Drone Den"], '\Documents\EVE\logs\Chatlogs')
+    event_loop = asyncio.get_event_loop()
+    b = asyncio.ensure_future(hmm())
+    event_loop.run_until_complete(b)
+    event_loop.close()
