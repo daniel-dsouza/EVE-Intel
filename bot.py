@@ -13,7 +13,7 @@ import esi_routes as esi
 import message_parser
 
 
-VERSION = 'v0.2'
+VERSION = 'v0.3'
 evebot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), description='An intel scraper for EVE')
 config = configparser.ConfigParser()
 
