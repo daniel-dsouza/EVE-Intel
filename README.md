@@ -40,6 +40,9 @@ To get your own discord bot token, you will need make a bot user.
 [discord]
 token = your discord bot token, no quotes
 dev_token = (optional) your discord bot token, used over token
+channel_overrides = (optional) [
+    ["Discord Channel", "system"],
+    ["another Discord channel", "another system"]]
 
 [intel]
 eve_channels = [

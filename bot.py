@@ -37,6 +37,19 @@ class EVEbot:
             system = System(chan.name[6:].swapcase())
             self.intel_channels[system.objectID] = (chan, system)
 
+        # handle channel overrides
+        if 'channel_overrides' in config['discord']:
+            overrides = json.loads(config['discord']['channel_overrides'])
+            for override in overrides:
+                chan = discord.utils.find(lambda c: c.name == override[0], self.bot.get_all_channels())
+                system = System(override[1])
+                if chan is None:
+                    print('Could not find Discord channel: {}'.format(override[0]))
+                elif system is None:
+                    print('Could not find system: {}'.format(override[1]))
+                else:
+                    self.intel_channels[system.objectID] = (chan, system)
+
         print('Providing intel to', ", ".join([x[1].name for x in self.intel_channels.values()]))
 
     async def scrape_to_systems(self):
