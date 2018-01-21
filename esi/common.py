@@ -1,8 +1,6 @@
 import aiohttp
 
-from esi.character import Character
-from esi.ship import Ship
-from esi.system import System
+from esi.eve_types import Character, Corporation, Ship, System
 
 
 BASE_URL = "https://esi.tech.ccp.is/latest/"
@@ -44,6 +42,7 @@ async def universe_names_to_ids(names):
                     'systems': System,
                     'characters': Character,
                     'inventory_types': Ship,
+                    'corporations': Corporation
                 }
                 obj = options[category](name=item['name'], object_id=item['id'])
                 result[obj.name] = obj

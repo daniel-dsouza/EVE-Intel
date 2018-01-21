@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from esi import common
-from esi.system import create_system
+from esi.eve_types import System
 
 
 VERSION = 'v0.2'
@@ -20,7 +20,7 @@ async def on_ready():
     else:
         print("You are running version {}.".format(VERSION))
 
-    system = await create_system(name='BQ0-UU')
+    system = await System.new(name='BQ0-UU')
     print(system.objectID)
 
 bot.run('MjkyMzYzMzQzMzkyNjY5NzA3.DTcAxw.iNSdUsDly_daT4GSc21pX_dQ6Xk')

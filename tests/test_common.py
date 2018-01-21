@@ -2,8 +2,7 @@ import asynctest
 import aiohttp
 import esi.common
 from esi.common import universe_names_to_ids, name_to_id
-from esi.system import System
-from esi.character import Character
+from esi.eve_types import Character, System
 
 
 class TestUniverseNamesToIds(asynctest.TestCase):

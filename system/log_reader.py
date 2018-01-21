@@ -1,17 +1,7 @@
 import codecs
-from datetime import datetime
 import re
 
-
-class Message:
-    def __init__(self, message):
-        self.raw = message  # for debug only
-        self.timestamp = datetime.strptime(message[2:21], '%Y.%m.%d %H:%M:%S')
-        self.sender = message[message.find(']')+2:message.find('>')-1]
-        self.message = message[message.find('>')+2:]
-
-    def __str__(self):
-        return str(self.timestamp) + '\nSender: ' + self.sender + '\nMessage: ' + self.message
+from system.tokenizer import Message
 
 
 class ChannelReader:
